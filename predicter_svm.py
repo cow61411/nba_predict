@@ -5,12 +5,13 @@ from sklearn import svm
 from sklearn.model_selection import cross_val_score
 from sklearn.linear_model import SGDClassifier
 from linear_regression_predict import get_predict_PER
+from sklearn.naive_bayes import GaussianNB
 
 
 class predicter:
 
 
-    def __init__(self , player_dict_path , team_dict_path , game_detail_path , time_data_path):
+    def __init__(self , player_dict_path , team_dict_path , game_detail_path , time_data_path , team_rating_path , predict_rating_path):
         with open(player_dict_path , "rb") as fp:
             self.player_dict = json.load(fp)
 
@@ -22,6 +23,12 @@ class predicter:
 
         with open(time_data_path , "rb") as fp:
             self.time_data = json.load(fp)
+
+        with open(team_rating_path , "rb") as fp:
+            self.team_rating = json.load(fp)
+
+        with open(predict_rating_path , "rb") as fp:
+            self.predict_rating = json.load(fp)
 
     def _prepare_data_players(self):
         train_data = list()
@@ -149,6 +156,12 @@ class predicter:
                 points = list()
                 judge = True
                 for team , players in teams.items():
+                    if year != 2016:
+                        data_temp.append(self.team_rating[team][str(year)]["ORtg"])
+                        data_temp.append(self.team_rating[team][str(year)]["DRtg"])
+                    else:
+                        data_temp.append(self.predict_rating[team]["ORtg"])
+                        data_temp.append(self.predict_rating[team]["DRtg"])
                     points.append(players["Team Totals"]["PTS"])
                     ps = list()
                     ms = list()
@@ -337,7 +350,8 @@ class predicter:
         print len(test_label)
         print test_data[0]
         '''
-        clf = svm.SVC(C = 0.1)
+        #clf = svm.SVC(C = 0.1)
+        clf = GaussianNB()
         #clf = SGDClassifier(loss="modified_huber" , penalty="l1")
         #scores = cross_val_score(clf , train_data , train_label , cv = 5)
         #'''
@@ -354,7 +368,7 @@ class predicter:
 
 
 
-test = predicter("./../../data/player_dict.json" , "./../../data/team_dict.json" , "./../../data/player_data_with_per_eff_gmsc.json" , "./../../data/player_monthly_PER.json")
+test = predicter("./../../data/player_dict.json" , "./../../data/team_dict.json" , "./../../data/player_data_with_per_eff_gmsc.json" , "./../../data/player_monthly_PER.json" , "./../../data/team_rating.json" , "./../../data/predict_rating.json")
 test.predict()
 
 
