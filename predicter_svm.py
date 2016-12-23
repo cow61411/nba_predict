@@ -4,6 +4,8 @@ import numpy as np
 from sklearn import svm
 from sklearn.model_selection import cross_val_score
 from sklearn.linear_model import SGDClassifier
+from linear_regression_predict import get_predict_PER
+
 
 class predicter:
 
@@ -145,6 +147,7 @@ class predicter:
             for game , teams in games.items():
                 data_temp = list()
                 points = list()
+                judge = True
                 for team , players in teams.items():
                     points.append(players["Team Totals"]["PTS"])
                     ps = list()
@@ -159,9 +162,17 @@ class predicter:
                     #print test
                     names = map(lambda x : x[0] , sort_status)[:5]
                     for name in names:
+                        data_temp.append(players[name]["PER"])
                         if year != 2016:
                             data_temp.append(players[name]["PER"])
                         else:
+                            time = 12 * (year - 2005) + int(date[4:6])
+                            predict_per = get_predict_PER(name , self.time_data , time)
+                            if predict_per == None:
+                                judge = False
+                            else:
+                                data_temp.append(predict_per)
+                            '''
                             judge = False
                             for temp_year in map(str , range(2006 , 2016)[::-1]):
                                 for temp_month in map(str , range(1 , 13)[::-1]):
@@ -175,10 +186,13 @@ class predicter:
                             if not judge:
                                 print "failed to get PER"
                                 data_temp.append(0)
+                            '''
                 label_temp = points.index(max(points))
                 #'''
                 #if len(data_temp) != 12:
                     #print "error"
+                if not judge:
+                    continue
                 if year == 2016:
                     test_data.append(data_temp)
                     test_label.append(label_temp)
@@ -340,7 +354,7 @@ class predicter:
 
 
 
-test = predicter("./../data/player_dict.json" , "./../data/team_dict.json" , "./../data/player_data_with_per_eff_gmsc.json" , "./../data/player_monthly_PER.json")
+test = predicter("./../../data/player_dict.json" , "./../../data/team_dict.json" , "./../../data/player_data_with_per_eff_gmsc.json" , "./../../data/player_monthly_PER.json")
 test.predict()
 
 
